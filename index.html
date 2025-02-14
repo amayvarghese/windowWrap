@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Capture</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        video, canvas, #captured-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+        }
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+        }
+        #capture-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgb(102, 183, 237);
+            color: white;
+            padding: 15px 30px;
+            font-size: 18px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            z-index: 1000; /* Ensure button stays on top */
+        }
+    </style>
+</head>
+<body>
+
+    <video id="camera" autoplay></video>
+    <img id="overlay" src="images/frameOverlay.png" alt="Instruction Overlay">
+    <canvas id="canvas" style="display:none;"></canvas>
+    <button id="capture-btn">Capture</button>
+
+    <script>
+        const video = document.getElementById("camera");
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const captureBtn = document.getElementById("capture-btn");
+
+        // Start Camera
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+            .then(stream => video.srcObject = stream)
+            .catch(err => console.error("Camera error: ", err));
+
+        captureBtn.addEventListener("click", () => {
+            if (captureBtn.textContent === "Capture") {
+                // Capture the image
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                // Convert canvas to image
+                const imageData = canvas.toDataURL("image/png");
+
+                // Store the image in localStorage
+                localStorage.setItem("capturedImage", imageData);
+
+                // Stop the camera stream
+                const stream = video.srcObject;
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+
+                // Hide video and display the captured image
+                video.style.display = "none";
+                
+                let capturedImg = document.createElement("img");
+                capturedImg.src = imageData;
+                capturedImg.id = "captured-image";
+                capturedImg.style.position = "absolute";
+                capturedImg.style.top = "0";
+                capturedImg.style.left = "0";
+                capturedImg.style.width = "100vw";
+                capturedImg.style.height = "100vh";
+                capturedImg.style.objectFit = "cover";
+                capturedImg.style.zIndex = "500"; // Ensure it's behind the button
+
+                // Remove old image if exists
+                const existingImg = document.getElementById("captured-image");
+                if (existingImg) existingImg.remove();
+
+                document.body.appendChild(capturedImg);
+
+                // Change button text to "Submit" and keep it visible
+                captureBtn.textContent = "Submit";
+                captureBtn.style.display = "block"; // Ensure it's still visible
+                captureBtn.style.zIndex = "1000"; // Ensure it's on top
+            } else if (captureBtn.textContent === "Submit") {
+                // Redirect to index.html
+                window.location.href = 'drawOnImage.html';
+            }
+        });
+    </script>
+    
+</body>
+</html>
