@@ -13,8 +13,8 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             object-fit: cover;
         }
         canvas, #captured-image {
@@ -47,27 +47,51 @@
             cursor: pointer;
             z-index: 1000; /* Ensure button stays on top */
         }
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 24px;
+            display: none;
+        }
     </style>
 </head>
 <body>
 
-    <video id="camera" autoplay></video>
+    <video id="camera" autoplay muted></video>
     <img id="overlay" src="images/frameOverlay.png" alt="Instruction Overlay">
     <canvas id="canvas" style="display:none;"></canvas>
     <button id="capture-btn">Capture</button>
+    <div id="loading">Loading Camera...</div>
 
     <script>
         const video = document.getElementById("camera");
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
         const captureBtn = document.getElementById("capture-btn");
+        const loading = document.getElementById("loading");
 
         // Start Camera
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
             .then(stream => {
                 // Set the stream to video element
                 video.srcObject = stream;
-                video.play();  // Ensure the video element plays the stream
+
+                // Display loading text until the video starts playing
+                loading.style.display = "block";
+
+                // When video is ready to play, hide the loading text
+                video.onplaying = () => {
+                    loading.style.display = "none";
+                    video.play();  // Play the video once ready
+                };
+
+                // Error handling
+                video.onerror = () => {
+                    alert("Error accessing the camera. Please check your permissions.");
+                };
             })
             .catch(err => {
                 console.error("Camera error: ", err);
