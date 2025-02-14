@@ -9,7 +9,15 @@
             margin: 0;
             overflow: hidden;
         }
-        video, canvas, #captured-image {
+        video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        canvas, #captured-image {
             position: absolute;
             top: 0;
             left: 0;
@@ -56,8 +64,15 @@
 
         // Start Camera
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-            .then(stream => video.srcObject = stream)
-            .catch(err => console.error("Camera error: ", err));
+            .then(stream => {
+                // Set the stream to video element
+                video.srcObject = stream;
+                video.play();  // Ensure the video element plays the stream
+            })
+            .catch(err => {
+                console.error("Camera error: ", err);
+                alert("Camera access is required to use this feature.");
+            });
 
         captureBtn.addEventListener("click", () => {
             if (captureBtn.textContent === "Capture") {
